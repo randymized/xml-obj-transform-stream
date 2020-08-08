@@ -21,7 +21,8 @@ exports.parseEntities= Saxophone.parseEntities
 class XMLTransform extends Transform {
     constructor(options) {
         const opt = Object.assign({}, options);
-        const optinclude = opt.include || AvailableNodes;
+        let optinclude = opt.include || AvailableNodes;
+        if (!Array.isArray(optinclude)) optinclude= [optinclude]
         delete opt.include
         const optNoEmptyText = opt.noEmptyText
         delete opt.noEmptyText
