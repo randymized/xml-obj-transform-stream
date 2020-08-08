@@ -242,4 +242,52 @@ describe('XML Obj Transform Stream', function() {
 
     });
 
+    it('should allow reporting if a tag is self-closing when tagclose is not reported', function(done) {
+        const xml= selfClosingXML
+        const options= {noEmptyText:true,reportSelfClosing:true,include:'tagopen'}
+        const expected= [
+            [ 'tagopen', 'outer', '', false ],  // note the fourth element: self-closing?
+            [ 'tagopen', 'selfclose', ' ', true ],
+        ]
+        const objectArrayComparator = new ObjectArrayComparator(expected);
+        pipeline(
+            new ReadableString(xml),
+            new XMLTransform(options),
+            objectArrayComparator,
+            (err) => {
+                if(err) {
+                    done(err);
+                }
+                else {
+                    done()
+                }
+            }
+        )
+
+    });
+
+    it('should ignore whether self-closing if not requested and tagclose not included', function(done) {
+        const xml= selfClosingXML
+        const options= {noEmptyText:true,include:'tagopen'}
+        const expected= [
+            [ 'tagopen', 'outer', '' ],  // note the fourth element: self-closing?
+            [ 'tagopen', 'selfclose', ' ' ],
+        ]
+        const objectArrayComparator = new ObjectArrayComparator(expected);
+        pipeline(
+            new ReadableString(xml),
+            new XMLTransform(options),
+            objectArrayComparator,
+            (err) => {
+                if(err) {
+                    done(err);
+                }
+                else {
+                    done()
+                }
+            }
+        )
+
+    });
+
 });
