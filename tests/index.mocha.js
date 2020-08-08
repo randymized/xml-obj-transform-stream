@@ -23,6 +23,11 @@ const sampleXML= tags.stripIndent`
 <other attr="value"></other>
 </head>`
 
+const selfClosingXML= tags.stripIndent`
+    <outer>
+    <selfclose />
+    </outer>`
+
 class ConsoleDirWritable extends Writable {
     constructor(options) {
         super(Object.assign({},options, {objectMode: true}))
@@ -79,7 +84,7 @@ class ReadableString extends Readable {
 
 describe('XML Obj Transform Stream', function() {
     it('should parse a sample that contains several elements', function(done) {
-        const sampleXMLParsed= [
+        const compareTo= [
             [ 'processinginstruction', 'xml version="1.0" encoding="UTF-8"' ],
             [ 'text', '\n' ],
             [ 'tagopen', 'head', '' ],
@@ -113,7 +118,7 @@ describe('XML Obj Transform Stream', function() {
             [ 'tagclose', 'head' ],
             [ 'text', '\n' ],
         ]
-        const objectArrayComparator = new ObjectArrayComparator(sampleXMLParsed);
+        const objectArrayComparator = new ObjectArrayComparator(compareTo);
         pipeline(
             new ReadableString(sampleXML),
             new XMLTransform(),
@@ -134,7 +139,7 @@ describe('XML Obj Transform Stream', function() {
     it('should allow choosing types of elements to report', function(done) {
         const toInclude = ['tagopen', 'tagclose'];
         const options = { include: toInclude };
-        const sampleXMLParsed= [
+        const compareTo= [
             [ 'tagopen', 'head', '' ],
             [ 'tagopen', 'title', '' ],
             [ 'tagclose', 'title' ],
@@ -152,7 +157,7 @@ describe('XML Obj Transform Stream', function() {
             [ 'tagclose', 'other' ],
             [ 'tagclose', 'head' ]
         ]
-        const objectArrayComparator = new ObjectArrayComparator(sampleXMLParsed);
+        const objectArrayComparator = new ObjectArrayComparator(compareTo);
         pipeline(
             new ReadableString(sampleXML),
             new XMLTransform(options),
@@ -197,6 +202,32 @@ describe('XML Obj Transform Stream', function() {
         const objectArrayComparator = new ObjectArrayComparator(sampleXMLParsed);
         pipeline(
             new ReadableString(sampleXML),
+            new XMLTransform(options),
+            objectArrayComparator,
+            (err) => {
+                if(err) {
+                    done(err);
+                }
+                else {
+                    done()
+                }
+            }
+        )
+
+    });
+
+    it('should allow reporting if a tag is self-closing', function(done) {
+        const xml= selfClosingXML
+        const options= {noEmptyText:true,reportSelfClosing:true}
+        const expected= [
+            [ 'tagopen', 'outer', '', false ],  // note the fourth element: self-closing?
+            [ 'tagopen', 'selfclose', ' ', true ],
+            [ 'tagclose', 'selfclose' ],
+            [ 'tagclose', 'outer' ],
+        ]
+        const objectArrayComparator = new ObjectArrayComparator(expected);
+        pipeline(
+            new ReadableString(xml),
             new XMLTransform(options),
             objectArrayComparator,
             (err) => {
