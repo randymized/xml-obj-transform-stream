@@ -1,0 +1,39 @@
+{
+  "name": "xml-obj-transform-stream",
+  "version": "1.0.0",
+  "description": "A transform stream that takes a stream of XML as input and outputs a stream of objects representing the start and end tags, text nodes, and other SAX parser events.",
+  "main": "src/transform.js",
+  "scripts": {
+    "mocha": "mocha tests/*.mocha.js",
+    "mocha-debug": "mocha --inspect-brk tests/*.mocha.js",
+    "test": "npm run mocha",
+    "test-debug": "npm run mocha-debug"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/randymized/xml-obj-transform-stream.git"
+  },
+  "keywords": [
+    "XML",
+    "transform",
+    "stream"
+  ],
+  "author": "Randy McLaughlin",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/randymized/xml-obj-transform-stream/issues"
+  },
+  "homepage": "https://github.com/randymized/xml-obj-transform-stream#readme",
+  "dependencies": {
+    "saxophone": "^0.6.1",
+    "tiny-queue": "^0.2.1"
+  },
+  "devDependencies": {
+    "common-tags": "^1.8.0",
+    "mocha": "^8.1.1",
+    "should": "^13.2.3"
+  },
+  "engines": {
+    "node": ">=10.19.0"
+  }
+}
