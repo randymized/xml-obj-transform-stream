@@ -28,8 +28,6 @@ class XMLTransform extends Transform {
         delete opt.noEmptyText
         const optReportSelfClosing = opt.reportSelfClosing
         delete opt.reportSelfClosing
-        const parseAttrs= opt.hasOwnProperty('parseAttrs') ? opt.parseAttrs : true
-        delete opt.parseAttrs
         super(Object.assign({}, opt, { readableObjectMode: true }));
 
         this.parser = new Saxophone(); // This object is a writable stream that will emit an event for each tag or node parsed from the incoming data
@@ -38,14 +36,6 @@ class XMLTransform extends Transform {
         const queue = this.queue;
 
         const wantsTagclose= optinclude.includes('tagclose')
-        function parseAttrsOrNot(attrs) {
-            if (parseAttrs && attrs) {
-                return Saxophone.parseAttrs(attrs);
-            }
-            else {
-                return {}
-            }
-        }
         optinclude.forEach(include=>{
             switch (include) {
                 case 'tagopen':

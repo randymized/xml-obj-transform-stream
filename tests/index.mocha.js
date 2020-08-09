@@ -6,7 +6,7 @@ const assert = require('assert');
 const should = require('should');
 
 const tags = require('common-tags');
-const {XMLTransform}= require('../src/transform');
+const {XMLTransform,parseAttrs,parseEntities}= require('../src/transform');
 const { runInThisContext } = require('vm');
 const wants= ['tagopen','text','tagclose',]
 
@@ -57,7 +57,6 @@ class ObjectArrayComparator extends Writable {
         this.index= 0
     }
     _write(chunk,encoding,callback) {
-        debugger
         should.deepEqual(chunk,this.compareTo[this.index])
         this.index+= 1
         callback()
@@ -246,7 +245,7 @@ describe('XML Obj Transform Stream', function() {
         const xml= selfClosingXML
         const options= {noEmptyText:true,reportSelfClosing:true,include:'tagopen'}
         const expected= [
-            [ 'tagopen', 'outer', '', false ],  // note the fourth element: self-closing?
+            [ 'tagopen', 'outer', '', false ],
             [ 'tagopen', 'selfclose', ' ', true ],
         ]
         const objectArrayComparator = new ObjectArrayComparator(expected);
@@ -289,5 +288,30 @@ describe('XML Obj Transform Stream', function() {
         )
 
     });
+
+    it('should parse attributes', function(done) {
+        const xml= '<hasattrs first="one" second="two"  third="three " />'
+        const options= {noEmptyText:true,include:'tagopen'}
+        const expected= [ 'tagopen', 'hasattrs', {first:'one',second:"two",third:'three '} ]
+        const objectArrayWritable = new ObjectArrayWritable(expected);
+        pipeline(
+            new ReadableString(xml),
+            new XMLTransform(options),
+            objectArrayWritable,
+            (err) => {
+                if(err) {
+                    done(err);
+                }
+                else {
+                    let tag= objectArrayWritable.accum.shift()
+                    tag[2]= parseAttrs(tag[2])
+                    should.deepEqual(tag,expected)
+                    done()
+                }
+            }
+        )
+
+    });
+
 
 });
