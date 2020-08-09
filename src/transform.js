@@ -2,6 +2,7 @@ const Saxophone = require('saxophone');
 const { Transform } = require('stream');
 const Queue = require('tiny-queue');
 const { parse } = require('path');
+const { OpenTagAttributeParser } = require("./OpenTagAttributeParser");
 
 const AvailableNodes= [
     'tagopen',
@@ -17,6 +18,7 @@ exports.Saxophone= Saxophone
 exports.parseAttrs= Saxophone.parseAttrs
 exports.parseEntities= Saxophone.parseEntities
 
+exports.OpenTagAttributeParser= OpenTagAttributeParser
 
 class XMLTransform extends Transform {
     constructor(options) {

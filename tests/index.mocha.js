@@ -6,7 +6,7 @@ const assert = require('assert');
 const should = require('should');
 
 const tags = require('common-tags');
-const {XMLTransform,parseAttrs,parseEntities}= require('../src/transform');
+const {XMLTransform,parseAttrs,parseEntities,OpenTagAttributeParser}= require('../src/transform');
 const { runInThisContext } = require('vm');
 const wants= ['tagopen','text','tagclose',]
 
@@ -289,7 +289,7 @@ describe('XML Obj Transform Stream', function() {
 
     });
 
-    it('should parse attributes', function(done) {
+    it('should allow attributes to be parsed by exporting Saxophone.parseAttrs', function(done) {
         const xml= '<hasattrs first="one" second="two"  third="three " />'
         const options= {noEmptyText:true,include:'tagopen'}
         const expected= [ 'tagopen', 'hasattrs', {first:'one',second:"two",third:'three '} ]
@@ -306,6 +306,33 @@ describe('XML Obj Transform Stream', function() {
                     let tag= objectArrayWritable.accum.shift()
                     tag[2]= parseAttrs(tag[2])
                     should.deepEqual(tag,expected)
+                    done()
+                }
+            }
+        )
+
+    });
+
+    it('should provide an additional transform stream that reads objects emitted from the main tranform stream and parses attribute strings in open tags', function(done) {
+        const xml= tags.stripIndent`
+        <hasattrs first="one" second="two"  third="three " />
+        <emptyattrs />
+        `
+        const options= {noEmptyText:true,include:'tagopen'}
+        const expected= [
+            [ 'tagopen', 'hasattrs', {first:'one',second:"two",third:'three '} ],
+            [ 'tagopen', 'emptyattrs', {} ]
+        ]
+        pipeline(
+            new ReadableString(xml),
+            new XMLTransform(options),
+            new OpenTagAttributeParser(),
+            new ObjectArrayComparator(expected),
+            (err) => {
+                if(err) {
+                    done(err);
+                }
+                else {
                     done()
                 }
             }
