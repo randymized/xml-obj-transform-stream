@@ -63,15 +63,15 @@ Output:
 
 ### Exports:
 
-const {XMLTransform,parseAttrs,parseEntities,AvailableNodes,OpenTagAttributeParser}= require('xml-obj-transform-stream');
+`const {XMLTransform,parseAttrs,parseEntities,AvailableNodes,OpenTagAttributeParser}= require('xml-obj-transform-stream');`
 
 - **XMLTransform** is a transform stream class. It is the main component of this module. The constructor is documented below.
 
 - **parseAttrs**
-As a convenience, Saxophone.parseAttrs is exported by this package. It parses a string of XML attributes, such as would be output as a result of parsing an opening tag.
+As a convenience, [Saxophone.parseAttrs](https://www.npmjs.com/package/saxophone#saxophoneparseattrsattrs) is exported by this package. It parses a string of XML attributes, such as would be output as a result of parsing an opening tag.
 
 - **parseEntities**
-As a convenience, Saxophone.parseEntities is exported by this package. It expands all XML entities in a string to the characters represented by the entities.
+As a convenience, [Saxophone.parseEntities](https://www.npmjs.com/package/saxophone#saxophoneparseentitiestext) is exported by this package. It expands all XML entities in a string to the characters represented by the entities.
 
 - **OpenTagAttributeParser** is a simple transform stream that can follow the main XMLTransform stream in a pipeline. It will apply `parseAttrs` to any non-blank attribute strings in opening tags.
 
@@ -93,7 +93,7 @@ If truish, `tagopen` objects will include a fourth, true, element if the tag is 
 
 ### Output:
 
-an `XMLTransform` object is a Transform stream. It outputs objects representing each XML node encountered to whatever it is piped to. Each object is an array representing the node, where the first element of the array is the type of node and the other elements contain additional data about that node. The types of nodes and their output are:
+an `XMLTransform` object is a Transform stream with object mode output. It outputs objects representing each XML node encountered to whatever it is piped to. Each object is an array representing the node, where the first element of the array is the type of node and the other elements contain additional data about that node. The types of nodes and their output are:
 
 - **tagopen**: `['tagopen', tag-name, attr-string, is-self-closing]`.
 -- `attr-string` may be parsed with `parseAttrs` to convert it into a key/value object
@@ -103,3 +103,6 @@ an `XMLTransform` object is a Transform stream. It outputs objects representing 
 - **cdata**: `['cdata',content]`
 - **commment**: `['comment',content]`
 - **processinginstruction**: `['processinginstruction',content]`. Content of the processing instruction is not parsed.
+
+## Licence:
+Released under the ISC license.
