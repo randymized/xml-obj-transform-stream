@@ -1,6 +1,6 @@
 {
   "name": "xml-obj-transform-stream",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A transform stream that takes a stream of XML as input and outputs a stream of objects representing the start and end tags, text nodes, and other SAX parser events.",
   "main": "src/transform.js",
   "scripts": {
