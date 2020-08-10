@@ -340,5 +340,10 @@ describe('XML Obj Transform Stream', function() {
 
     });
 
+    it('should allow access to the Saxophone.parseEntities function', function() {
+        assert.equal(parseEntities('&quot;Run!&quot;, he said'), '"Run!", he said', 'normalize &quot;');
+    })
+
+
 
 });
