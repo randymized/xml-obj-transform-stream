@@ -358,28 +358,44 @@ describe('XML Obj Transform Stream', function() {
         })
     });
 
-    it('should allow attributes to be parsed by exporting Saxophone.parseAttrs', function(done) {
+    describe('Test allowing attributes to be parsed by exporting Saxophone.parseAttrs', function () {
         const xml= '<hasattrs first="one" second="two"  third="three " />'
         const options= {noEmptyText:true,include:'tagopen'}
         const expected= [ 'tagopen', 'hasattrs', {first:'one',second:"two",third:'three '} ]
-        const objectArrayWritable = new ObjectArrayWritable(expected);
-        pipeline(
-            new ReadableString(xml),
-            new XMLTransform(options),
-            objectArrayWritable,
-            (err) => {
-                if(err) {
-                    done(err);
+        it('using a transform stream', function(done) {
+            const objectArrayWritable = new ObjectArrayWritable(expected);
+            pipeline(
+                new ReadableString(xml),
+                new XMLTransform(options),
+                objectArrayWritable,
+                (err) => {
+                    if(err) {
+                        done(err);
+                    }
+                    else {
+                        let tag= objectArrayWritable.accum.shift()
+                        tag[2]= parseAttrs(tag[2])
+                        should.deepEqual(tag,expected)
+                        done()
+                    }
                 }
-                else {
-                    let tag= objectArrayWritable.accum.shift()
-                    tag[2]= parseAttrs(tag[2])
-                    should.deepEqual(tag,expected)
-                    done()
+            )
+        });
+        it('using asynchronous iteration', function(done) {
+            async function comparator(expected,source) {
+                for await (const received of source) {
+                    received[2]= parseAttrs(received[2])
+                    should.deepEqual(received,expected)
                 }
             }
-        )
-
+            comparator(expected,
+                xmlNodeGenerator(options,
+                    new ReadableString(xml)
+                )
+            )
+            .then(done)
+            .catch(done)
+        })
     });
 
     it('should provide an additional transform stream that reads objects emitted from the main tranform stream and parses attribute strings in open tags', function(done) {
