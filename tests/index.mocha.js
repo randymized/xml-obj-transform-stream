@@ -62,6 +62,13 @@ class ObjectArrayComparator extends Writable {
     }
 }
 
+async function asyncComparator(compareTo,source) {
+    let index= 0
+    for await (const received of source) {
+        should.deepEqual(received,compareTo[index++])
+    }
+}
+
 class ReadableString extends Readable {
     constructor(str) {
       super();
@@ -81,74 +88,68 @@ class ReadableString extends Readable {
   }
 
 describe('XML Obj Transform Stream', function() {
-  describe('Using a sample that contains several elements', function() {
-    const compareTo= [
-        [ 'processinginstruction', 'xml version="1.0" encoding="UTF-8"' ],
-        [ 'text', '\n' ],
-        [ 'tagopen', 'head', '' ],
-        [ 'text', '\n' ],
-        [ 'comment', ' this is a comment ' ],
-        [ 'text', '\n' ],
-        [ 'tagopen', 'title', '' ],
-        [ 'text', 'XML Test File' ],
-        [ 'tagclose', 'title' ],
-        [ 'text', '\n' ],
-        [ 'tagopen', 'selfclose', ' ' ],
-        [ 'tagclose', 'selfclose' ],
-        [ 'text', '\n' ],
-        [ 'tagopen', 'cdata-section', '' ],
-        [ 'cdata', 'this is a c&data s<>ction' ],
-        [ 'tagclose', 'cdata-section' ],
-        [ 'text', '\n' ],
-        [ 'tagopen', 'empty', '' ],
-        [ 'tagclose', 'empty' ],
-        [ 'text', '\n' ],
-        [ 'tagopen', 'hasattrs', ' first="one" second="two"  third="three " ' ],
-        [ 'tagclose', 'hasattrs' ],
-        [ 'text', '\n' ],
-        [ 'tagopen', 'textarea', '' ],
-        [ 'text', ' this\nis\na\r\n\ttextual\ncontent  ' ],
-        [ 'tagclose', 'textarea' ],
-        [ 'text', '\n' ],
-        [ 'tagopen', 'other', ' attr="value"' ],
-        [ 'tagclose', 'other' ],
-        [ 'text', '\n' ],
-        [ 'tagclose', 'head' ],
-        [ 'text', '\n' ],
-    ]
-    it('should successfully parse with a transform stream', function(done) {
-        const objectArrayComparator = new ObjectArrayComparator(compareTo);
-        pipeline(
-            new ReadableString(sampleXML),
-            new XMLTransform(),
-            objectArrayComparator,
-            (err) => {
-                if(err) {
-                    done(err);
+    describe('Using a sample that contains several elements', function() {
+        const compareTo= [
+            [ 'processinginstruction', 'xml version="1.0" encoding="UTF-8"' ],
+            [ 'text', '\n' ],
+            [ 'tagopen', 'head', '' ],
+            [ 'text', '\n' ],
+            [ 'comment', ' this is a comment ' ],
+            [ 'text', '\n' ],
+            [ 'tagopen', 'title', '' ],
+            [ 'text', 'XML Test File' ],
+            [ 'tagclose', 'title' ],
+            [ 'text', '\n' ],
+            [ 'tagopen', 'selfclose', ' ' ],
+            [ 'tagclose', 'selfclose' ],
+            [ 'text', '\n' ],
+            [ 'tagopen', 'cdata-section', '' ],
+            [ 'cdata', 'this is a c&data s<>ction' ],
+            [ 'tagclose', 'cdata-section' ],
+            [ 'text', '\n' ],
+            [ 'tagopen', 'empty', '' ],
+            [ 'tagclose', 'empty' ],
+            [ 'text', '\n' ],
+            [ 'tagopen', 'hasattrs', ' first="one" second="two"  third="three " ' ],
+            [ 'tagclose', 'hasattrs' ],
+            [ 'text', '\n' ],
+            [ 'tagopen', 'textarea', '' ],
+            [ 'text', ' this\nis\na\r\n\ttextual\ncontent  ' ],
+            [ 'tagclose', 'textarea' ],
+            [ 'text', '\n' ],
+            [ 'tagopen', 'other', ' attr="value"' ],
+            [ 'tagclose', 'other' ],
+            [ 'text', '\n' ],
+            [ 'tagclose', 'head' ],
+            [ 'text', '\n' ],
+        ]
+        it('should successfully parse with a transform stream', function(done) {
+            const objectArrayComparator = new ObjectArrayComparator(compareTo);
+            pipeline(
+                new ReadableString(sampleXML),
+                new XMLTransform(),
+                objectArrayComparator,
+                (err) => {
+                    if(err) {
+                        done(err);
+                    }
+                    else {
+                        done()
+                    }
                 }
-                else {
-                    done()
-                }
-            }
-        )
-
-    })
-    it('should successfully parse using asynchronous iteration', function(done) {
-        async function asyncComparator(compareTo,source) {
-            let index= 0
-            for await (const received of source) {
-                should.deepEqual(received,compareTo[index++])
-            }
-        }
-        asyncComparator(compareTo,
-            xmlNodeGenerator({},
-                new ReadableString(sampleXML)
             )
-        )
-        .then(done)
-        .catch(done)
+
+        })
+        it('should successfully parse using asynchronous iteration', function(done) {
+            asyncComparator(compareTo,
+                xmlNodeGenerator({},
+                    new ReadableString(sampleXML)
+                )
+            )
+            .then(done)
+            .catch(done)
+        })
     })
-  })
 
     // here goes your code
     it('should allow choosing types of elements to report', function(done) {
