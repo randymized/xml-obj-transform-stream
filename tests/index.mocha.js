@@ -6,7 +6,7 @@ const assert = require('assert');
 const should = require('should');
 
 const tags = require('common-tags');
-const {XMLTransform,xmlNodeGenerator,parseAttrs,parseEntities,OpenTagAttributeParser}= require('../src/transform');
+const {XMLTransform,xmlNodeGenerator,parseAttrs,parseEntities,OpenTagAttributeParser}= require('../src');
 const { runInThisContext } = require('vm');
 const wants= ['tagopen','text','tagclose',]
 
@@ -428,7 +428,4 @@ describe('XML Obj Transform Stream', function() {
     it('should allow access to the Saxophone.parseEntities function', function() {
         assert.equal(parseEntities('&quot;Run!&quot;, he said'), '"Run!", he said', 'normalize &quot;');
     })
-
-
-
 });
