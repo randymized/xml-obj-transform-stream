@@ -6,7 +6,7 @@ const assert = require('assert');
 const should = require('should');
 
 const tags = require('common-tags');
-const {XMLTransform,xmlNodeGenerator,parseAttrs,parseEntities,OpenTagAttributeParser}= require('../src');
+const {XMLTransform,xmlNodeGenerator,parseAttrs,parseEntities,OpenTagAttributeParser,openTagAttributeAsyncMap}= require('../src');
 const { runInThisContext } = require('vm');
 const wants= ['tagopen','text','tagclose',]
 
@@ -398,7 +398,7 @@ describe('XML Obj Transform Stream', function() {
         })
     });
 
-    it('should provide an additional transform stream that reads objects emitted from the main tranform stream and parses attribute strings in open tags', function(done) {
+    describe('Test the transform stream and async iterator map that parses open tag attributes', function () {
         const xml= tags.stripIndent`
         <hasattrs first="one" second="two"  third="three " />
         <emptyattrs />
@@ -408,22 +408,36 @@ describe('XML Obj Transform Stream', function() {
             [ 'tagopen', 'hasattrs', {first:'one',second:"two",third:'three '} ],
             [ 'tagopen', 'emptyattrs', {} ]
         ]
-        pipeline(
-            new ReadableString(xml),
-            new XMLTransform(options),
-            new OpenTagAttributeParser(),
-            new ObjectArrayComparator(expected),
-            (err) => {
-                if(err) {
-                    done(err);
+       it('test the transform stream', function(done) {
+            pipeline(
+                new ReadableString(xml),
+                new XMLTransform(options),
+                new OpenTagAttributeParser(),
+                new ObjectArrayComparator(expected),
+                (err) => {
+                    if(err) {
+                        done(err);
+                    }
+                    else {
+                        done()
+                    }
                 }
-                else {
-                    done()
-                }
-            }
-        )
+            )
 
-    });
+        });
+        it('test the asynchronous iterator map', function(done) {
+            debugger
+            asyncComparator(expected,
+                openTagAttributeAsyncMap(
+                    xmlNodeGenerator(options,
+                        new ReadableString(xml)
+                    )
+                )
+            )
+            .then(done)
+            .catch(done)
+        })
+})
 
     it('should allow access to the Saxophone.parseEntities function', function() {
         assert.equal(parseEntities('&quot;Run!&quot;, he said'), '"Run!", he said', 'normalize &quot;');
