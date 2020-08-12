@@ -290,52 +290,72 @@ describe('XML Obj Transform Stream', function() {
 
     });
 
-    it('should allow reporting if a tag is self-closing when tagclose is not reported', function(done) {
+    describe('Test reporting if a tag is self-closing when tagclose is not reported', function () {
         const xml= selfClosingXML
         const options= {noEmptyText:true,reportSelfClosing:true,include:'tagopen'}
         const expected= [
             [ 'tagopen', 'outer', '', false ],
             [ 'tagopen', 'selfclose', ' ', true ],
         ]
-        const objectArrayComparator = new ObjectArrayComparator(expected);
-        pipeline(
-            new ReadableString(xml),
-            new XMLTransform(options),
-            objectArrayComparator,
-            (err) => {
-                if(err) {
-                    done(err);
+        it('using a transform stream', function(done) {
+            const objectArrayComparator = new ObjectArrayComparator(expected);
+            pipeline(
+                new ReadableString(xml),
+                new XMLTransform(options),
+                objectArrayComparator,
+                (err) => {
+                    if(err) {
+                        done(err);
+                    }
+                    else {
+                        done()
+                    }
                 }
-                else {
-                    done()
-                }
-            }
-        )
-
+            )
+        });
+        it('using asynchronous iteration', function(done) {
+            asyncComparator(expected,
+                xmlNodeGenerator(options,
+                    new ReadableString(xml)
+                )
+            )
+            .then(done)
+            .catch(done)
+        })
     });
 
-    it('should ignore whether self-closing if not requested and tagclose not included', function(done) {
+    describe('Test ignoring whether self-closing if not requested and tagclose not included', function () {
         const xml= selfClosingXML
         const options= {noEmptyText:true,include:'tagopen'}
         const expected= [
             [ 'tagopen', 'outer', '' ],  // note the fourth element: self-closing?
             [ 'tagopen', 'selfclose', ' ' ],
         ]
-        const objectArrayComparator = new ObjectArrayComparator(expected);
-        pipeline(
-            new ReadableString(xml),
-            new XMLTransform(options),
-            objectArrayComparator,
-            (err) => {
-                if(err) {
-                    done(err);
+        it('using a transform stream', function(done) {
+            const objectArrayComparator = new ObjectArrayComparator(expected);
+            pipeline(
+                new ReadableString(xml),
+                new XMLTransform(options),
+                objectArrayComparator,
+                (err) => {
+                    if(err) {
+                        done(err);
+                    }
+                    else {
+                        done()
+                    }
                 }
-                else {
-                    done()
-                }
-            }
-        )
-
+            )
+        });
+        it('using asynchronous iteration', function(done) {
+            asyncComparator(expected,
+                xmlNodeGenerator(options,
+                    new ReadableString(xml)
+                )
+            )
+            .then(done)
+            .catch(done)
+        })
     });
 
     it('should allow attributes to be parsed by exporting Saxophone.parseAttrs', function(done) {
