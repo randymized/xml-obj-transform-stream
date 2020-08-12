@@ -200,7 +200,7 @@ describe('XML Obj Transform Stream', function() {
         })
     });
 
-    it('should allow omitting empty text', function(done) {
+    describe('Test omitting empty text', function () {
         const options= {noEmptyText:true}
         const sampleXMLParsed= [
             [ 'processinginstruction', 'xml version="1.0" encoding="UTF-8"' ],
@@ -225,22 +225,33 @@ describe('XML Obj Transform Stream', function() {
             [ 'tagclose', 'other' ],
             [ 'tagclose', 'head' ],
         ]
-        const objectArrayComparator = new ObjectArrayComparator(sampleXMLParsed);
-        pipeline(
-            new ReadableString(sampleXML),
-            new XMLTransform(options),
-            objectArrayComparator,
-            (err) => {
-                if(err) {
-                    done(err);
+        it('using a transform stream', function(done) {
+            const objectArrayComparator = new ObjectArrayComparator(sampleXMLParsed);
+            pipeline(
+                new ReadableString(sampleXML),
+                new XMLTransform(options),
+                objectArrayComparator,
+                (err) => {
+                    if(err) {
+                        done(err);
+                    }
+                    else {
+                        done()
+                    }
                 }
-                else {
-                    done()
-                }
-            }
-        )
+            )
 
-    });
+        });
+        it('using asynchronous iteration', function(done) {
+            asyncComparator(sampleXMLParsed,
+                xmlNodeGenerator(options,
+                    new ReadableString(sampleXML)
+                )
+            )
+            .then(done)
+            .catch(done)
+        })
+    })
 
     it('should allow reporting if a tag is self-closing', function(done) {
         const xml= selfClosingXML
