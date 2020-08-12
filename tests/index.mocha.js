@@ -152,7 +152,7 @@ describe('XML Obj Transform Stream', function() {
     })
 
     // here goes your code
-    it('should allow choosing types of elements to report', function(done) {
+    describe('should allow choosing types of elements to report', function() {
         const toInclude = ['tagopen', 'tagclose'];
         const options = { include: toInclude };
         const compareTo= [
@@ -173,21 +173,31 @@ describe('XML Obj Transform Stream', function() {
             [ 'tagclose', 'other' ],
             [ 'tagclose', 'head' ]
         ]
-        const objectArrayComparator = new ObjectArrayComparator(compareTo);
-        pipeline(
-            new ReadableString(sampleXML),
-            new XMLTransform(options),
-            objectArrayComparator,
-            (err) => {
-                if(err) {
-                    done(err);
+        it('using a transform stream', function(done) {
+            const objectArrayComparator = new ObjectArrayComparator(compareTo);
+            pipeline(
+                new ReadableString(sampleXML),
+                new XMLTransform(options),
+                objectArrayComparator,
+                (err) => {
+                    if(err) {
+                        done(err);
+                    }
+                    else {
+                        done()
+                    }
                 }
-                else {
-                    done()
-                }
-            }
-        )
-
+            )
+        })
+        it('using asynchronous iteration', function(done) {
+            asyncComparator(compareTo,
+                xmlNodeGenerator(options,
+                    new ReadableString(sampleXML)
+                )
+            )
+            .then(done)
+            .catch(done)
+        })
     });
 
     it('should allow omitting empty text', function(done) {
