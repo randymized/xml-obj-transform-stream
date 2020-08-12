@@ -1,17 +1,10 @@
 const Saxophone = require('saxophone');
 const { Transform } = require('stream');
 const Queue = require('tiny-queue');
-const { parse } = require('path');
 const { OpenTagAttributeParser } = require("./OpenTagAttributeParser");
+exports.xmlNodeGenerator= require("./generator").xmlNodeGenerator
 
-const AvailableNodes= [
-    'tagopen',
-    'tagclose',
-    'text',
-    'cdata',
-    'comment',
-    'processinginstruction',
-]
+const { setUpParserQueue, AvailableNodes } = require("./setUpParserQueue");
 exports.AvailableNodes= AvailableNodes
 
 exports.Saxophone= Saxophone
@@ -23,81 +16,20 @@ exports.OpenTagAttributeParser= OpenTagAttributeParser
 class XMLTransform extends Transform {
     constructor(options) {
         const opt = Object.assign({}, options);
-        let optinclude = opt.include || AvailableNodes;
-        if (!Array.isArray(optinclude)) optinclude= [optinclude]
+        const parserOptions= {
+            include: opt.include || AvailableNodes,
+            noEmptyText: opt.noEmptyText,
+            reportSelfClosing: opt.reportSelfClosing
+        }
         delete opt.include
-        const optNoEmptyText = opt.noEmptyText
         delete opt.noEmptyText
-        const optReportSelfClosing = opt.reportSelfClosing
         delete opt.reportSelfClosing
-        super(Object.assign({}, opt, { readableObjectMode: true }));
+        super(Object.assign(opt, { readableObjectMode: true }));
 
         this.parser = new Saxophone(); // This object is a writable stream that will emit an event for each tag or node parsed from the incoming data
 
-        this.queue = new Queue();
-        const queue = this.queue;
-
-        const wantsTagclose= optinclude.includes('tagclose')
-        optinclude.forEach(include=>{
-            switch (include) {
-                case 'tagopen':
-                    if (wantsTagclose) {
-                        if (optReportSelfClosing) {
-                            this.parser.on(include, obj => {
-                                queue.push([include, obj.name, obj.attrs, obj.isSelfClosing])
-                                if (obj.isSelfClosing) {
-                                    queue.push(['tagclose',obj.name])
-                                }
-                            })
-                        } else {
-                            this.parser.on(include, obj => {
-                                queue.push([include, obj.name, obj.attrs])
-                                if (obj.isSelfClosing) {
-                                    queue.push(['tagclose',obj.name])
-                                }
-                            })
-                        }
-                    }
-                    else {
-                        if (optReportSelfClosing) {
-                            this.parser.on(include, obj => {
-                                queue.push([include,obj.name,obj.attrs,obj.isSelfClosing])
-                            })
-                        } else {
-                            this.parser.on(include, obj => {
-                                queue.push([include,obj.name,obj.attrs])
-                            })
-                        }
-                    }
-                    break;
-                case 'tagclose':
-                    this.parser.on(include, obj => {
-                        queue.push([include,obj.name])
-                    })
-                    break;
-                case 'text':
-                    if (optNoEmptyText) {
-                        this.parser.on(include, obj => {
-                            if (!/^\s*$/.test(obj.contents)) {
-                                queue.push([include,obj.contents])
-                            }
-                        })
-                    }
-                    else {
-                        this.parser.on(include, obj => {
-                            queue.push([include,obj.contents])
-                        })
-                    }
-                    break;
-                case 'cdata':
-                case 'comment':
-                case 'processinginstruction':
-                    this.parser.on(include, obj => queue.push([include,obj.contents]))
-                    break;
-            }
-        })
+        this.getQueuedNodes= setUpParserQueue(parserOptions, this.parser)
     }
-
     _transform(chunk, encoding, callback) {
         new Promise((resolve,reject)=>{
             try {
@@ -119,14 +51,8 @@ class XMLTransform extends Transform {
     }
 
     _dumpQueue() {
-        const queue = this.queue;
-        while (queue.length > 0) {
-            const item = queue.shift();
-            if (item[0] == 'error')
-                return item[1];
-            this.push(item);
-        }
-        return null;
+        for (const it of this.getQueuedNodes()) this.push(it)
+        return null
     }
 
     _flush(callback) {
