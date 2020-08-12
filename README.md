@@ -1,10 +1,14 @@
-A transform stream that takes a stream of XML as input and outputs a stream of objects representing the start and end tags, text nodes, and other SAX parser events.
+The purpose of this module is to convert XML into a either a stream or an asynchronous iterator of the nodes (events) encountered upon parsing the XML. The nodes that are output include start and end tags, text nodes, and other SAX parser events.
 
-This module wraps around [Saxophone](https://www.npmjs.com/package/saxophone). Saxophone implements a readable stream and then emits events as XML nodes are parsed. This module implements a transform stream where input is sent to Saxophone for parsing and the resultant events are then pushed out as objects to the writable side of the stream. Please refer to the Saxophone documentation for more details about how it parses XML, its limits and for benchmarks.
+This module wraps around [Saxophone](https://www.npmjs.com/package/saxophone). Saxophone implements a readable stream and then emits events as XML nodes are parsed. This module implements a transform stream where input is sent to Saxophone for parsing and the resultant events are then pushed out as objects to the writable side of the stream. This module alternatively implements an asynchronous generator function that uses Saxophone to parse XML from an iterator, producing an iterable sequence of nodes. In either case a succession of nodes is output, where each node is represented by small tuple-like array containing the node type and associated data.
+
+Please refer to the Saxophone documentation for more details about how it parses XML, its limits, and for benchmarks.
+
+The transform stream expects XML to be piped into it from a readable stream. The asynchronous iterator expects input from an iterator, which could be a readable stream.
 
 ## Installation
 
-This library works in Node.JS ≥10.0.
+This library works in Node.JS ≥10.
 To install with `npm`:
 
 ```sh
@@ -21,7 +25,7 @@ $ npm install
 $ npm test
 ```
 
-## Example
+## Transform Stream Example
 
 ```js
 const {XMLTransform}= require('xml-obj-transform-stream');
@@ -59,13 +63,47 @@ Output:
 [ 'tagclose', 'subpart' ]
 [ 'tagclose', 'root' ]
 ```
+
+## Asynchronous Iterator Example
+
+```js
+const {xmlNodeGenerator}= require('xml-obj-transform-stream');
+const {Readable}= require('stream')
+
+async function consoledirWriter(iterator) {
+    for await (tuple of iterator) {
+        console.dir(tuple)
+    }
+}
+
+const options= {noEmptyText:true}
+
+consoledirWriter(
+    xmlNodeGenerator(options,
+        Readable.from('<root><subpart>some text</subpart></root>')
+    )
+).catch(console.error)
+```
+
+Output (same as from transform stream):
+
+```sh
+[ 'tagopen', 'root', '' ]
+[ 'tagopen', 'subpart', '' ]
+[ 'text', 'some text' ]
+[ 'tagclose', 'subpart' ]
+[ 'tagclose', 'root' ]
+```
+
 ## Documentation
 
 ### Exports:
 
-`const {XMLTransform,parseAttrs,parseEntities,AvailableNodes,OpenTagAttributeParser}= require('xml-obj-transform-stream');`
+`const {XMLTransform,xmlNodeGenerator,parseAttrs,parseEntities,AvailableNodes,OpenTagAttributeParser}= require('xml-obj-transform-stream');`
 
-- **XMLTransform** is a transform stream class. It is the main component of this module. The constructor is documented below.
+- **XMLTransform** is a transform stream class. It is one of the two main alternative components of this module. The constructor is documented below.
+
+- **xmlNodeGenerator** is an async generator function. It is one of the two main alternative components of this module. The function is documented below.
 
 - **parseAttrs**
 As a convenience, [Saxophone.parseAttrs](https://www.npmjs.com/package/saxophone#saxophoneparseattrsattrs) is exported by this package. It parses a string of XML attributes, such as would be output as a result of parsing an opening tag.
@@ -103,6 +141,11 @@ an `XMLTransform` object is a Transform stream with object mode output. It outpu
 - **cdata**: `['cdata',content]`
 - **commment**: `['comment',content]`
 - **processinginstruction**: `['processinginstruction',content]`. Content of the processing instruction is not parsed.
+
+### `xmlNodeGenerator(options,iterator)`
+An async generator function that takes an iterator of XML as an argument and produces an asynchronously iterable succession of nodes.
+- The options are the same as `XMLTransform`, except that any additional options will not be passed through to a Tranform constructor, since this is a function and not a subclass of Transform.
+- The output is similar to that from `XMLTransform`, except that they are in the form of an asynchronous iterator over the nodes.
 
 ## Licence:
 Released under the ISC license.
