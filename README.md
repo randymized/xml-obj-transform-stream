@@ -1,3 +1,10 @@
+[![Not Maintained](https://img.shields.io/badge/Maintenance%20Level-Abandoned-orange.svg)](https://gist.github.com/cheerfulstoic/d107229326a01ff0f333a1d3476e068d)
+
+xml-obj-transform-stream is no longer being actively developed and is being abandoned. At the time I last worked on it I was having trouble getting it to operate correctly.
+At the same time I was working on [async-saxophone](https://github.com/randymized/async-saxophone) and having more success. That project also appears to enjoy more download activity. 
+
+## Description
+
 The purpose of this module is to convert XML into a either a stream or an asynchronous iterator of the nodes (events) encountered upon parsing the XML. The nodes that are output include start and end tags, text nodes, and other SAX parser events.
 
 This module wraps around [Saxophone](https://www.npmjs.com/package/saxophone). Saxophone implements a readable stream and then emits events as XML nodes are parsed. This module implements a transform stream where input is sent to Saxophone for parsing and the resultant events are then pushed out as objects to the writable side of the stream. This module alternatively implements an asynchronous generator function that uses Saxophone to parse XML from an iterator, producing an iterable sequence of nodes. In either case a succession of nodes is output, where each node is represented by small tuple-like array containing the node type and associated data.
